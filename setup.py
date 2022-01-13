@@ -9,6 +9,7 @@ if __name__ == '__main__':
     #
     setuptools.setup(
         name = 'xun',
+        version='1.0.0',
         description = 'xun: package generated with cookiecutter-equinor',
 
         author = 'Equinor',

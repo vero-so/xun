@@ -4,6 +4,7 @@ from dask.distributed import Client, LocalCluster
 from contextlib import closing
 from concurrent.futures import Future
 from unittest.mock import patch
+import dask
 import xun
 
 
@@ -65,6 +66,26 @@ def test_dask_driver_tackles_simple_worker_resource():
     client = Client(cluster)
     dask_driver = xun.functions.driver.Dask(client)
 
+    with closing(client):
+        blueprint = ftest.blueprint()
+        with PicklableMemoryStore() as store:
+            result = blueprint.run(driver=dask_driver, store=store)
+
+    cluster.close()
+
+    assert result == 'test'
+
+def test_dask_driver_config_worker_resource():
+    @xun.worker_resource('MEMORY', 10e2)
+    @xun.function()
+    def ftest():
+        return 'test'
+
+    # config must be set before the cluster is created
+    # with dask.config.set({"distributed.worker.resources.MEMORY": 10e2}):
+    cluster = LocalCluster(processes=False, n_workers=1)
+    client = Client(cluster)
+    dask_driver = xun.functions.driver.Dask(client)
     with closing(client):
         blueprint = ftest.blueprint()
         with PicklableMemoryStore() as store:
